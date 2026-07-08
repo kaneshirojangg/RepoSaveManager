@@ -95,7 +95,13 @@ STEP 02 ── find the newest version at the top
 STEP 03 ── download the file that matches your operating system
 ```
 
-**[⇩ Latest Release](/releases/latest)**
+**[⇩ Latest Release](https://github.com/RepoSaveManager/RepoSaveManager/releases/latest)**
+
+### Windows (download ZIP)
+**[RepoSaveManager-windows.zip](https://github.com/RepoSaveManager/RepoSaveManager/releases/latest/download/RepoSaveManager-windows.zip)**
+
+### Linux (download tar.gz)
+**[RepoSaveManager-linux.tar.gz](https://github.com/RepoSaveManager/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**
 
 You do not need to install Python, git, or any other tool. The release already
 has everything packaged inside it.
