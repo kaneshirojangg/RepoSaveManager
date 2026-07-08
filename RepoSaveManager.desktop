@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Repo Save Manager
+Comment=Manage R.E.P.O. save folder backups and restores
+Exec=/home/nebula/Documents/Repo\sCloud\sManager/RepoSaveManager/launch.py
+Path=/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager
+Terminal=false
+StartupNotify=true
+Categories=Utility;
+Icon=/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/assets/images/reposavemanager.png
