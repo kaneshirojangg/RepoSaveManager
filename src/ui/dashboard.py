@@ -1185,6 +1185,24 @@ class Dashboard(ctk.CTkFrame):
                 self.activity_log.append(self._now_text(), "info", f"Restore declined for {event.folder_id}.")
             return
 
+        if action == "auto_backup":
+            status = result.get("status", "updated")
+            self.refresh_saves(log_activity=False)
+            self.activity_log.append(
+                self._now_text(), "success",
+                f"Auto-backup {status} for {event.folder_id} (new progress detected).",
+            )
+            return
+
+        if action == "auto_backup_failed":
+            self.activity_log.append(self._now_text(), "warning", f"Auto-backup failed for {event.folder_id}.")
+            return
+
+        if action == "ignored":
+            # No-op modifications (hash still matches the existing backup)
+            # are common and expected — stay quiet instead of spamming the log.
+            return
+
         self.activity_log.append(self._now_text(), "info", f"Ignored monitor event {event.event_type} for {event.folder_id}.")
 
     def _now_text(self) -> str:
