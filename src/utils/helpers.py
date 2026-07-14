@@ -63,19 +63,31 @@ def normalize_path(path_value: str | Path) -> Path:
     return Path(path_value).expanduser().resolve()
 
 
-def open_folder_in_file_manager(folder_path: str | Path) -> None:
-    """Open a folder in the user's file manager.
+def open_folder_in_file_manager(folder_path: str | Path) -> bool:
+    """Open a folder in the user's *actual default* file manager.
 
-    Shared implementation used across Dashboard/Settings/Wizard.
-    Uses OS-specific launchers:
-    - Linux: xdg-open
-    - macOS: open
-    - Windows: explorer
+    Single shared implementation used by both Dashboard and SetupWizard —
+    previously Dashboard had its own near-duplicate copy of this logic, and
+    SetupWizard incorrectly called into Dashboard's private copy passing
+    itself (a SetupWizard, not a Dashboard) as `self`, which crashed with an
+    AttributeError on the logging line every time (silently, since Tkinter
+    swallows callback exceptions). Consolidating to one function here fixes
+    that crash and guarantees both entry points behave identically.
+
+    Windows previously shelled out to `subprocess.Popen(["explorer", ...])`,
+    which depends on `explorer` being resolvable via PATH at runtime — not
+    guaranteed inside a PyInstaller-frozen exe — and is known to silently
+    fall back to Explorer's default view (Quick Access / This PC) instead of
+    the requested folder when that resolution or argument parsing goes
+    slightly wrong. That fallback is what looks like "a different file
+    manager opened" to a user. `os.startfile()` is the OS-native way to
+    invoke the folder's actually-registered default handler and avoids the
+    PATH/argument-parsing issues entirely.
+
+    Returns True if the folder manager launch was attempted successfully,
+    False if the folder was invalid or the launch failed (an error dialog
+    is shown in both failure cases).
     """
-    import shutil
-    import subprocess
-    import sys
-
     # Import here to avoid circular imports at module import time.
     from src.ui.dialogs import show_error_dialog
 
@@ -92,25 +104,32 @@ def open_folder_in_file_manager(folder_path: str | Path) -> None:
             "The configured folder does not exist or is not a directory.",
             str(folder),
         )
-        return
+        return False
 
     try:
-        if sys.platform.startswith("linux"):
-            opener = shutil.which("xdg-open")
-            if not opener:
-                raise RuntimeError("xdg-open is not available")
-            subprocess.Popen([opener, str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if sys.platform.startswith("win"):
+            # os.startfile uses ShellExecute under the hood, which resolves
+            # to whatever file manager Windows actually has registered as
+            # the default handler for directories — no PATH lookup, no
+            # argument-quoting ambiguity, no silent fallback to the wrong
+            # view.
+            os.startfile(str(folder))  # type: ignore[attr-defined]
         elif sys.platform == "darwin":
             opener = shutil.which("open")
             if not opener:
                 raise RuntimeError("open is not available")
             subprocess.Popen([opener, str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        elif sys.platform.startswith("win"):
-            subprocess.Popen(["explorer", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif sys.platform.startswith("linux"):
+            opener = shutil.which("xdg-open")
+            if not opener:
+                raise RuntimeError("xdg-open is not available")
+            subprocess.Popen([opener, str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             subprocess.Popen(["xdg-open", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
     except Exception as exc:
         show_error_dialog("Open Folder Failed", "Unable to open the configured folder.", str(exc))
+        return False
 
 
 def browse_for_directory(title: str, initial_dir: str | Path | None = None) -> str | None:

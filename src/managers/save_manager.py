@@ -78,9 +78,18 @@ class SaveManager:
     def refresh_save(self, save: SaveModel) -> SaveModel:
         fingerprint = build_save_fingerprint(save.path, include_main_hash=True)
         main_file_hash = fingerprint.main_file_hash
-        main_file_size, _ = get_main_file_metadata(save.path)
+        main_file_size, main_file_mtime = get_main_file_metadata(save.path)
         save.size = fingerprint.folder_size
-        save.mtime = fingerprint.folder_mtime
+        # Use the main save file's own mtime (falling back to the folder's
+        # mtime only if there's no main file yet) instead of the folder's
+        # mtime. The folder's mtime can drift independently of the .es3
+        # file (e.g. other files being touched inside it), which caused
+        # this value to disagree with BackupManager's own "is this backup
+        # still current?" fingerprint check — that check is keyed on
+        # main_file_size/main_file_mtime/main_file_hash, not folder mtime.
+        # That mismatch was the root cause of the "Backup outdated" badge
+        # staying lit even right after a successful backup.
+        save.mtime = main_file_mtime or fingerprint.folder_mtime
         save.folder_ctime = fingerprint.folder_ctime
         save.main_file_hash = main_file_hash or hash_main_file(save.path)
         if main_file_size is not None:
@@ -103,11 +112,17 @@ class SaveManager:
                 except ValueError:
                     backup_timestamp = None
 
+        # See refresh_save() above for why main_file_mtime (not folder_mtime)
+        # is used here: it's the same signal BackupManager uses to decide
+        # whether an existing backup is still current, so the "outdated"
+        # badge and the actual backup-currency check now agree.
+        effective_mtime = fingerprint.main_file_mtime or fingerprint.folder_mtime
+
         return SaveModel.create(
             path=folder_path,
             folder_ctime=fingerprint.folder_ctime,
             size=fingerprint.folder_size,
-            mtime=fingerprint.folder_mtime,
+            mtime=effective_mtime,
             main_file_hash=fingerprint.main_file_hash,
             has_backup=has_backup,
             backup_timestamp=backup_timestamp,

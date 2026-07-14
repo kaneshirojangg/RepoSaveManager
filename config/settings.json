@@ -1,0 +1,10 @@
+{
+  "save_folder": "/home/nebula/AppData/LocalLow/semiwork/Repo/saves",
+  "backup_folder": "/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/backups",
+  "auto_start_monitoring": true,
+  "confirm_before_restore": true,
+  "confirm_before_delete": true,
+  "theme": "dark",
+  "created_at": "2026-07-14T10:14:32",
+  "updated_at": "2026-07-14T10:27:01"
+}

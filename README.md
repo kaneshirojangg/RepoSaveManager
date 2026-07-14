@@ -20,7 +20,6 @@
 
 ---
 
-
 ##  Important notice
 
 ```
@@ -42,29 +41,28 @@
 ```
 
 If something looks or behaves oddly, that's expected from time to time — this
-manual has a [Troubleshooting](#-troubleshooting) section near the end to help you
-figure out what's going on.
+manual has a [Troubleshooting](#troubleshooting) section near the end to help
+you figure out what's going on.
 
 ---
 
 ## ▸ Table of contents
 
-```
-01. What is this?
-02. Download
-03. Install — Windows
-04. Install — Linux
-05. First launch
-06. Understanding the dashboard
-07. How to use it (step by step)
-08. Troubleshooting
-09. Uninstall
-10. Good habits (read this!)
-11. Notes for the curious
-```
+1. [What is this?](#what-is-this)
+2. [Download](#download)
+3. [Install — Windows](#install--windows)
+4. [Install — Linux](#install--linux)
+5. [First launch](#first-launch)
+6. [Understanding the dashboard](#understanding-the-dashboard)
+7. [How to use it (step by step)](#how-to-use-it-step-by-step)
+8. [Troubleshooting](#troubleshooting)
+9. [Uninstall](#uninstall)
+10. [Good habits (read this!)](#good-habits-read-this)
+11. [Notes for the curious](#notes-for-the-curious)
 
 ---
 
+<a id="what-is-this"></a>
 ## ▸ 01. What is this?
 
 Repo Save Manager is a small desktop app that watches over your **R.E.P.O.**
@@ -85,75 +83,100 @@ folder on your computer, and the "key" is your save file.
 └────────────────────────────────────────────────────────────┘
 ```
 
+[↑ back to top](#-table-of-contents)
+
 ---
 
+<a id="download"></a>
 ## ▸ 02. Download
 
+**Step 1.** Go to the project page:
+**[github.com/kaneshirojangg/RepoSaveManager](https://github.com/kaneshirojangg/RepoSaveManager)**
+
+**Step 2.** Click the green **`<> Code`** button.
+
+**Step 3.** Click **`Download ZIP`**.
+
 ```
-STEP 01 ── go to the GitHub Releases page
-STEP 02 ── find the newest version at the top
-STEP 03 ── download the file that matches your operating system
+┌───────────────────────────────────┐
+│  <> Code  ▾                       │
+│  ┌───────────────────────────┐    │
+│  │  Clone            HTTPS   │    │
+│  │  Open with GitHub Desktop │    │
+│  │  Download ZIP        ← ●  │    │
+│  └───────────────────────────┘    │
+└───────────────────────────────────┘
 ```
 
-**[⇩ Latest Release](https://github.com/RepoSaveManager/RepoSaveManager/releases/latest)**
+**Step 4.** The file **`RepoSaveManager-main.zip`** downloads to your
+`Downloads` folder.
 
-### Windows (download ZIP)
-**[RepoSaveManager-windows.zip](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-windows.zip)**
+No GitHub account, git, or command-line tools needed for this part.
 
-### Linux (download tar.gz)
-**[RepoSaveManager-linux.tar.gz](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**
+Now go to **[Install — Windows](#install--windows)** or
+**[Install — Linux](#install--linux)**.
 
-You do not need to install Python, git, or any other tool. The release already
-has everything packaged inside it.
+[↑ back to top](#-table-of-contents)
 
 ---
 
+<a id="install--windows"></a>
 ## ▸ 03. Install — Windows
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  WINDOWS SETUP WIZARD                                            │
-└──────────────────────────────────────────────────────────────────┘
+1. Open your **Downloads** folder and find **`RepoSaveManager-main.zip`**.
+2. Right-click it → **Extract All...** → **Extract**.
+3. Open the extracted **`RepoSaveManager-main`** folder.
+4. No Python yet? Install it from **[python.org/downloads](https://www.python.org/downloads/)**.
+   ⚠️ On the first install screen, tick **"Add python.exe to PATH"** before
+   clicking Install.
+5. Inside the folder, hold **Shift**, right-click empty space, choose
+   **"Open PowerShell window here"** (or **"Open Terminal here"**).
+6. Paste and run:
+   ```powershell
+   pip install -r requirements.txt
+   python launch.py
+   ```
+7. If Windows shows a security warning, click **More info** → **Run anyway**.
+8. Set your save + backup folders when asked.
 
-  STEP 01 ── download RepoSaveManager-windows.zip
-  STEP 02 ── right-click the zip → "Extract All..."
-  STEP 03 ── open the extracted folder
-  STEP 04 ── double-click  Repo Save Manager.exe
-  STEP 05 ── if Windows shows a security warning, click
-             "More info" → "Run anyway"
-             (this is normal for small independent apps)
-  STEP 06 ── set your save + backup folders when asked
-```
+> Keep the whole `RepoSaveManager-main` folder together — don't move files
+> out of it individually.
 
-> Keep the whole extracted folder together — don't move just the `.exe` file
-> on its own, or it may not find its files.
+> **Next time:** just repeat steps 5–6 to launch the app again.
+
+[↑ back to top](#-table-of-contents)
 
 ---
 
+<a id="install--linux"></a>
 ## ▸ 04. Install — Linux
 
+1. Find the downloaded **`RepoSaveManager-main.zip`**.
+2. Extract it: right-click → **Extract Here**, or run:
+   ```bash
+   unzip RepoSaveManager-main.zip
+   ```
+3. Open a terminal inside the extracted **`RepoSaveManager-main`** folder.
+4. Run the installer:
+   ```bash
+   bash install.sh
+   ```
+5. Open **"Repo Save Manager"** from your app menu / desktop.
+
+No `install.sh`, or it didn't work on your distro? Run it directly instead:
+```bash
+python3 -m pip install -r requirements.txt
+python3 launch.py
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  LINUX SETUP WIZARD                                              │
-└──────────────────────────────────────────────────────────────────┘
 
-  STEP 01 ── download RepoSaveManager-linux.tar.gz
-  STEP 02 ── extract the archive (right-click → Extract, or:
-             tar -xzf RepoSaveManager-linux.tar.gz )
-  STEP 03 ── open a terminal in that extracted folder
-  STEP 04 ── run this once:
+> **Next time:** just open a terminal in that folder and run
+> `python3 launch.py`.
 
-                 bash install.sh
-
-  STEP 05 ── open "Repo Save Manager" from your app menu / desktop
-```
-
-Don't want it installed system-wide? You can instead mark
-`RepoSaveManager.desktop` as trusted / executable and open it directly from
-the extracted folder.
+[↑ back to top](#-table-of-contents)
 
 ---
 
+<a id="first-launch"></a>
 ## ▸ 05. First launch
 
 The very first time you open the app, it needs to know two locations:
@@ -182,8 +205,11 @@ Your save folder should contain folders that look like this:
 Once both folders are set, click **Test Configuration** to make sure
 everything checks out green, then click **Save**.
 
+[↑ back to top](#-table-of-contents)
+
 ---
 
+<a id="understanding-the-dashboard"></a>
 ## ▸ 06. Understanding the dashboard
 
 ```
@@ -248,8 +274,11 @@ proactively flagging something:
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+[↑ back to top](#-table-of-contents)
+
 ---
 
+<a id="how-to-use-it-step-by-step"></a>
 ## ▸ 07. How to use it (step by step)
 
 ```
@@ -287,17 +316,28 @@ proactively flagging something:
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+[↑ back to top](#-table-of-contents)
+
 ---
 
+<a id="troubleshooting"></a>
 ## ▸ 08. Troubleshooting
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
+│  PROBLEM: "python: command not found" / "python is not recognized"│
+│  TRY:     On some systems the command is `python3` instead of    │
+│           `python` — try that instead. On Windows, make sure you │
+│           ticked "Add python.exe to PATH" during install, then   │
+│           reopen PowerShell.                                      │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
 │  PROBLEM: The app closes itself a few seconds after opening      │
-│  TRY:     Update to the latest release — this was a known issue  │
-│           in earlier builds and should be fixed now. If it still │
-│           happens, run the app from a terminal/command prompt so │
-│           you can see the error message, and report it.          │
+│  TRY:     Re-download the ZIP to make sure you have the latest   │
+│           version — this was a known issue in earlier versions.  │
+│           If it still happens, note whatever error text appears  │
+│           in the terminal window and report it.                  │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
@@ -321,24 +361,32 @@ proactively flagging something:
 ```
 
 Still stuck? Since this app is vibe coded and still maturing, the most useful
-thing you can do is note exactly what you clicked, what you expected, and what
-happened instead — that makes any bug much faster to track down.
+thing you can do is note exactly what you clicked (or typed), what you
+expected, and what happened instead — that makes any bug much faster to
+track down.
+
+[↑ back to top](#-table-of-contents)
 
 ---
 
+<a id="uninstall"></a>
 ## ▸ 09. Uninstall
 
 **Linux** — if you used `install.sh`:
-
 ```bash
 bash uninstall.sh
 ```
 This removes the launcher, icon, and installed app files.
 
-**Windows** — just delete the folder you extracted the release into.
+**Windows / Linux (either way)** — you can also just delete the whole
+`RepoSaveManager-main` folder you extracted. This won't touch your actual
+R.E.P.O. saves or your backup folder — only the app itself.
+
+[↑ back to top](#-table-of-contents)
 
 ---
 
+<a id="good-habits-read-this"></a>
 ## ▸ 10. Good habits (read this!)
 
 ```
@@ -351,8 +399,11 @@ This removes the launcher, icon, and installed app files.
 [ ] Don't assume "no news is good news" — check in on it sometimes
 ```
 
+[↑ back to top](#-table-of-contents)
+
 ---
 
+<a id="notes-for-the-curious"></a>
 ## ▸ 11. Notes for the curious
 
 ```
@@ -364,6 +415,8 @@ This removes the launcher, icon, and installed app files.
 > the game's own internal backup rotation is never touched by
   this app — it only manages its own separate backup copy
 ```
+
+[↑ back to top](#-table-of-contents)
 
 <div align="center">
 

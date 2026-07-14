@@ -1,0 +1,33 @@
+2026-07-13 18:57:36 | INFO | Repo Save Manager.SettingsManager | Settings file missing (/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json); using defaults.
+2026-07-13 18:57:36 | INFO | Repo Save Manager.SettingsManager | Settings file missing (/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json); using defaults.
+2026-07-14 10:12:46 | INFO | Repo Save Manager.SettingsManager | Settings file missing (/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json); using defaults.
+2026-07-14 10:14:32 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:14:32 | INFO | Repo Save Manager.SettingsManager | Settings file missing (/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json); using defaults. config_dir_exists=True
+2026-07-14 10:14:32 | INFO | Repo Save Manager.SettingsManager | SettingsManager.save() target=/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (dir_exists=True, dir_writable=True)
+2026-07-14 10:14:32 | INFO | Repo Save Manager.SettingsManager | Saving settings to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:14:32 | INFO | Repo Save Manager.SettingsManager | Settings saved successfully to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (size_bytes=357).
+2026-07-14 10:14:33 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:14:33 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:14:52 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:14:52 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:15:22 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:15:22 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:25:17 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:25:17 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:25:20 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:25:20 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:25:20 | INFO | Repo Save Manager.SettingsManager | SettingsManager.save() target=/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (dir_exists=True, dir_writable=True)
+2026-07-14 10:25:20 | INFO | Repo Save Manager.SettingsManager | Saving settings to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=False).
+2026-07-14 10:25:20 | INFO | Repo Save Manager.SettingsManager | Settings saved successfully to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (size_bytes=358).
+2026-07-14 10:25:23 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:25:23 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=False).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=False).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | SettingsManager.save() target=/home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (dir_exists=True, dir_writable=True)
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Saving settings to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Settings reload verification from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Settings saved successfully to /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (size_bytes=357).
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | SettingsManager.load() using path: /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json
+2026-07-14 10:27:01 | INFO | Repo Save Manager.SettingsManager | Loaded settings from /home/nebula/Documents/Repo Cloud Manager/RepoSaveManager/config/settings.json (auto_start_monitoring=True).

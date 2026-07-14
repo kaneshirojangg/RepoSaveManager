@@ -18,6 +18,7 @@ except ImportError:  # pragma: no cover - runtime fallback for environments with
     ctk.CTkCheckBox = ctk.Checkbutton  # type: ignore[attr-defined]
 
 from src.managers.settings_manager import AppSettings, SettingsManager, SettingsValidationResult
+from src.ui.dialogs import ask_confirmation
 from src.ui.logo import load_logo_image, load_window_icon
 from src.ui import theme
 from src.utils.helpers import browse_for_directory, open_folder_in_file_manager
@@ -81,16 +82,25 @@ class SettingsWindow(ctk.CTkToplevel):
         self.auto_start_var = ctk.BooleanVar(value=self.settings.auto_start_monitoring)
         self.confirm_restore_var = ctk.BooleanVar(value=self.settings.confirm_before_restore)
         self.confirm_delete_var = ctk.BooleanVar(value=self.settings.confirm_before_delete)
-        self.theme_var = ctk.StringVar(value=self.settings.theme)
         self.status_var = ctk.StringVar(value="Adjust settings and run Test Configuration before saving.")
 
         self._build_ui()
+        # Show the current configuration's health immediately instead of a
+        # static placeholder message — no need to click Test Configuration
+        # just to see whether things are already working.
+        self._test_configuration()
 
     def _build_ui(self) -> None:
         container = ctk.CTkFrame(self, fg_color="transparent")
         container.pack(fill="both", expand=True, padx=18, pady=18)
 
-        header = ctk.CTkFrame(container, fg_color=theme.BG_SECONDARY, corner_radius=theme.PANEL_CORNER_RADIUS, border_width=1, border_color=theme.BORDER)
+        header = ctk.CTkFrame(
+            container,
+            fg_color=theme.BG_SECONDARY,
+            corner_radius=theme.PANEL_CORNER_RADIUS,
+            border_width=1,
+            border_color=theme.BORDER,
+        )
         header.pack(fill="x", pady=(0, 12))
         header_inner = ctk.CTkFrame(header, fg_color="transparent")
         header_inner.pack(anchor="w", padx=18, pady=14, fill="x")
@@ -98,31 +108,72 @@ class SettingsWindow(ctk.CTkToplevel):
         title_stack = ctk.CTkFrame(header_inner, fg_color="transparent")
         title_stack.pack(side="left", anchor="w")
         ctk.CTkLabel(title_stack, text="SETTINGS", font=theme.header_font(22), text_color=theme.ACCENT).pack(anchor="w")
-        ctk.CTkLabel(title_stack, text="Save folders, backup folder, and confirmation preferences.", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w")
+        ctk.CTkLabel(
+            title_stack,
+            text="Save folders, backup folder, and confirmation preferences.",
+            font=theme.body_font(12),
+            text_color=theme.TEXT_SECONDARY,
+        ).pack(anchor="w")
 
         body = ctk.CTkFrame(container, fg_color="transparent")
         body.pack(fill="both", expand=True)
         body.grid_columnconfigure(0, weight=3)
         body.grid_columnconfigure(1, weight=2)
 
-        left = ctk.CTkFrame(body, fg_color=theme.BG_SECONDARY, corner_radius=theme.PANEL_CORNER_RADIUS, border_width=1, border_color=theme.BORDER)
-        right = ctk.CTkFrame(body, fg_color=theme.BG_SECONDARY, corner_radius=theme.PANEL_CORNER_RADIUS, border_width=1, border_color=theme.BORDER)
+        left = ctk.CTkFrame(
+            body,
+            fg_color=theme.BG_SECONDARY,
+            corner_radius=theme.PANEL_CORNER_RADIUS,
+            border_width=1,
+            border_color=theme.BORDER,
+        )
+        right = ctk.CTkFrame(
+            body,
+            fg_color=theme.BG_SECONDARY,
+            corner_radius=theme.PANEL_CORNER_RADIUS,
+            border_width=1,
+            border_color=theme.BORDER,
+        )
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=10)
         right.grid(row=0, column=1, sticky="nsew", padx=(10, 0), pady=10)
 
         self._build_paths_section(left)
         self._build_preferences_section(right)
 
-        validation_card = ctk.CTkFrame(container, fg_color=theme.BG_SECONDARY, corner_radius=theme.PANEL_CORNER_RADIUS, border_width=1, border_color=theme.BORDER)
+        validation_card = ctk.CTkFrame(
+            container,
+            fg_color=theme.BG_SECONDARY,
+            corner_radius=theme.PANEL_CORNER_RADIUS,
+            border_width=1,
+            border_color=theme.BORDER,
+        )
         validation_card.pack(fill="both", expand=False, pady=(0, 12))
-        ctk.CTkLabel(validation_card, text="VALIDATION", font=theme.header_font(13), text_color=theme.TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(12, 4))
-        self.validation_box = ctk.CTkTextbox(validation_card, height=170, wrap="word", fg_color=theme.BG_INPUT, corner_radius=theme.CARD_CORNER_RADIUS, font=theme.mono_font(12))
+        ctk.CTkLabel(
+            validation_card,
+            text="VALIDATION",
+            font=theme.header_font(13),
+            text_color=theme.TEXT_PRIMARY,
+        ).pack(anchor="w", padx=16, pady=(12, 4))
+        self.validation_box = ctk.CTkTextbox(
+            validation_card,
+            height=170,
+            wrap="word",
+            fg_color=theme.BG_INPUT,
+            corner_radius=theme.CARD_CORNER_RADIUS,
+            font=theme.mono_font(12),
+        )
         self.validation_box.pack(fill="both", expand=False, padx=16, pady=(0, 14))
         self._configure_validation_tags()
         self.validation_box.insert("1.0", "Run Test Configuration to validate your selected folders.")
         self.validation_box.configure(state="disabled")
 
-        self.status_label = ctk.CTkLabel(container, textvariable=self.status_var, anchor="w", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY)
+        self.status_label = ctk.CTkLabel(
+            container,
+            textvariable=self.status_var,
+            anchor="w",
+            font=theme.body_font(12),
+            text_color=theme.TEXT_SECONDARY,
+        )
         self.status_label.pack(fill="x", pady=(0, 8))
 
         footer = ctk.CTkFrame(container, fg_color="transparent")
@@ -146,7 +197,13 @@ class SettingsWindow(ctk.CTkToplevel):
         ctk.CTkLabel(panel, text="FOLDERS", font=theme.header_font(15), text_color=theme.TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(16, 8))
 
         ctk.CTkLabel(panel, text="Repo save folder", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(10, 4))
-        ctk.CTkEntry(panel, textvariable=self.save_folder_var, fg_color=theme.BG_INPUT, border_color=theme.BORDER, text_color=theme.TEXT_PRIMARY).pack(fill="x", padx=16, pady=(0, 8))
+        ctk.CTkEntry(
+            panel,
+            textvariable=self.save_folder_var,
+            fg_color=theme.BG_INPUT,
+            border_color=theme.BORDER,
+            text_color=theme.TEXT_PRIMARY,
+        ).pack(fill="x", padx=16, pady=(0, 8))
 
         btn_row_save = ctk.CTkFrame(panel, fg_color="transparent")
         btn_row_save.pack(fill="x", padx=16, pady=(0, 8))
@@ -154,7 +211,13 @@ class SettingsWindow(ctk.CTkToplevel):
         ctk.CTkButton(btn_row_save, text="\U0001F5C4  Open", width=90, command=self._open_save_folder, **_OUTLINE_BUTTON).pack(side="left", padx=(8, 0))
 
         ctk.CTkLabel(panel, text="Backup folder", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(10, 4))
-        ctk.CTkEntry(panel, textvariable=self.backup_folder_var, fg_color=theme.BG_INPUT, border_color=theme.BORDER, text_color=theme.TEXT_PRIMARY).pack(fill="x", padx=16, pady=(0, 8))
+        ctk.CTkEntry(
+            panel,
+            textvariable=self.backup_folder_var,
+            fg_color=theme.BG_INPUT,
+            border_color=theme.BORDER,
+            text_color=theme.TEXT_PRIMARY,
+        ).pack(fill="x", padx=16, pady=(0, 8))
 
         btn_row_backup = ctk.CTkFrame(panel, fg_color="transparent")
         btn_row_backup.pack(fill="x", padx=16, pady=(0, 16))
@@ -164,23 +227,30 @@ class SettingsWindow(ctk.CTkToplevel):
     def _build_preferences_section(self, panel: ctk.CTkFrame) -> None:
         ctk.CTkLabel(panel, text="PREFERENCES", font=theme.header_font(15), text_color=theme.TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(16, 8))
 
-        ctk.CTkLabel(panel, text="Theme", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(10, 4))
-        theme_row = ctk.CTkFrame(panel, fg_color="transparent")
-        theme_row.pack(fill="x", padx=16, pady=(0, 8))
-        ctk.CTkEntry(theme_row, textvariable=self.theme_var, fg_color=theme.BG_INPUT, border_color=theme.BORDER, text_color=theme.TEXT_PRIMARY).pack(fill="x", expand=True)
-
-        ctk.CTkLabel(panel, text="Monitoring and confirmations", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(14, 4))
+        ctk.CTkLabel(panel, text="Monitoring and confirmations", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(10, 4))
         for var, label in (
             (self.auto_start_var, "Auto-start monitoring"),
             (self.confirm_restore_var, "Confirm before restore"),
             (self.confirm_delete_var, "Confirm before delete"),
         ):
             ctk.CTkCheckBox(
-                panel, text=label, variable=var,
-                fg_color=theme.ACCENT, hover_color=theme.ACCENT_HOVER,
-                text_color=theme.TEXT_PRIMARY, font=theme.body_font(12),
+                panel,
+                text=label,
+                variable=var,
+                fg_color=theme.ACCENT,
+                hover_color=theme.ACCENT_HOVER,
+                text_color=theme.TEXT_PRIMARY,
+                font=theme.body_font(12),
                 border_color=theme.BORDER,
             ).pack(anchor="w", padx=16, pady=6)
+
+        ctk.CTkLabel(
+            panel,
+            text="Auto-start monitoring enables live detection.\nThe app can prompt you to restore when saves are deleted.",
+            font=theme.body_font(10),
+            text_color=theme.TEXT_MUTED,
+            justify="left",
+        ).pack(anchor="w", padx=16, pady=(4, 12))
 
     def _browse_save_folder(self) -> None:
         selected = browse_for_directory("Select Repo Save Folder", self.save_folder_var.get())
@@ -195,24 +265,34 @@ class SettingsWindow(ctk.CTkToplevel):
             self.status_var.set("Backup folder selected.")
 
     def _open_save_folder(self) -> None:
-        from src.ui.dashboard import Dashboard
-
-        Dashboard._open_folder_in_file_manager(self, self.save_folder_var.get())
+        # Previously this borrowed Dashboard._open_folder_in_file_manager by
+        # passing `self` (a SettingsWindow) in place of a Dashboard instance.
+        # That method internally touches self.activity_log and self.logger,
+        # neither of which exist on SettingsWindow, so opening the folder
+        # would raise AttributeError (and the except-block's own
+        # self.logger.exception(...) call would then ALSO raise, since
+        # SettingsWindow has no logger either). Using the standalone helper
+        # that's already imported avoids all of that.
+        open_folder_in_file_manager(self.save_folder_var.get())
 
     def _open_backup_folder(self) -> None:
-        from src.ui.dashboard import Dashboard
-
-        Dashboard._open_folder_in_file_manager(self, self.backup_folder_var.get())
-
-
+        open_folder_in_file_manager(self.backup_folder_var.get())
 
     def _auto_detect(self) -> None:
         candidates = self.settings_manager.auto_detect_save_folders()
         if candidates:
             self.save_folder_var.set(str(candidates[0]))
             self.status_var.set(f"Auto-detected {len(candidates)} candidate folder(s); using the first.")
-        else:
-            self.status_var.set("No save folder candidates were found.")
+            self._test_configuration()
+            return
+
+        # If the OS default locations don't exist / no valid candidates were
+        # found, force manual selection.
+        self.status_var.set("Auto-detect did not find the save folder. Please browse to select it manually.")
+        selected_folder = browse_for_directory("Select Repo Save Folder", self.save_folder_var.get())
+        if selected_folder:
+            self.save_folder_var.set(selected_folder)
+        self._test_configuration()
 
     def _test_configuration(self) -> None:
         validation = self.settings_manager.validate(self.save_folder_var.get(), self.backup_folder_var.get())
@@ -239,25 +319,53 @@ class SettingsWindow(ctk.CTkToplevel):
         self.settings.auto_start_monitoring = self.auto_start_var.get()
         self.settings.confirm_before_restore = self.confirm_restore_var.get()
         self.settings.confirm_before_delete = self.confirm_delete_var.get()
-        self.settings.theme = self.theme_var.get().strip() or "dark"
 
         self.settings_manager.save(self.settings)
         self.result.saved = True
         self.result.settings = self.settings
+
+        # Some settings (notably monitoring behavior + watch root) must
+        # take effect on a fresh app launch. Communicate this using a
+        # modal dialog so the user always sees it.
         if callable(self.on_save):
             self.on_save(self.settings)
+
+        self.after(50, lambda: self._show_restart_required_dialog())
         self.destroy()
 
     def _reset_defaults(self) -> None:
+        if not ask_confirmation(
+            "Reset to Default",
+            "This will reset your save folder, backup folder, and preferences back to their defaults. Continue?",
+        ):
+            self.status_var.set("Reset cancelled.")
+            return
+
         self.settings = AppSettings.default()
         self.save_folder_var.set(self.settings.save_folder)
         self.backup_folder_var.set(self.settings.backup_folder)
         self.auto_start_var.set(self.settings.auto_start_monitoring)
         self.confirm_restore_var.set(self.settings.confirm_before_restore)
         self.confirm_delete_var.set(self.settings.confirm_before_delete)
-        self.theme_var.set(self.settings.theme)
         self.status_label.configure(text_color=theme.TEXT_SECONDARY)
         self.status_var.set("Settings reset to defaults.")
+        self._test_configuration()
+
+    def _show_restart_required_dialog(self) -> None:
+        """Show restart requirement after saving.
+
+        Implementation note:
+        We schedule this via `after()` so the save completes
+        and the main window gets its on_save callback before the modal.
+        """
+        try:
+            ask_confirmation(
+                "Restart Required",
+                "Settings saved. Please restart the application to apply the changes.",
+            )
+        except Exception:
+            # Never block closing if dialogs are unavailable.
+            pass
 
     def _cancel(self) -> None:
         self.result.saved = False
@@ -276,3 +384,4 @@ class SettingsWindow(ctk.CTkToplevel):
         if not messages:
             self.validation_box.insert("end", "No messages.\n", "neutral")
         self.validation_box.configure(state="disabled")
+

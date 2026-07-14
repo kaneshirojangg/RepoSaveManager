@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 
-import shutil
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -78,7 +76,7 @@ from src.ui.dialogs import YouDiedDialog, ask_confirmation, show_error_dialog, s
 from src.ui.activity_log import ActivityLog
 from src.ui.logo import load_logo_image
 from src.ui import theme
-from src.utils.helpers import format_bytes, format_datetime
+from src.utils.helpers import format_bytes, format_datetime, open_folder_in_file_manager
 
 
 
@@ -125,13 +123,11 @@ _BUTTON_STYLES: dict[str, dict[str, Any]] = {
 
 _ACTION_DEFINITIONS: list[tuple[str, str, str]] = [
     # (icon+label, style key, callback attribute name resolved at build time)
-    ("\U0001F504  Refresh Saves", "outline", "refresh_saves_action"),
-    ("\U0001F4C2  Open Save Folder", "outline", "open_save_folder"),
-    ("\U0001F5C3  Open Backup Folder", "outline", "open_backup_folder"),
+    ("\U0001F504  Refresh Saves", "primary", "refresh_saves_action"),
     ("\U0001F5D1  Delete Backup", "danger", "delete_backup"),
-    ("\u2699  Settings", "outline", "open_settings"),
     ("\u2716  Exit", "outline", "exit_app"),
 ]
+
 
 
 
@@ -198,6 +194,28 @@ class Dashboard(ctk.CTkFrame):
         self._build_layout()
         self.refresh_saves(log_activity=False)
 
+        # "Auto-start monitoring" was previously saved from the Settings
+        # window but never actually read anywhere at startup, so turning it
+        # on had no effect. start_monitoring() is safe to call even if
+        # monitoring is somehow already running (it just no-ops).
+        if settings.auto_start_monitoring:
+            self.start_monitoring()
+
+        # Both of these are self-rescheduling loops (update_clock calls
+        # self.after(...) on itself; _poll_monitor_events_loop below does
+        # the same). Neither was ever actually started anywhere — they were
+        # only ever *defined*, presumably meant to be kicked off externally
+        # by main_window.py. Starting them here means the dashboard works
+        # correctly on its own regardless of what else does or doesn't call
+        # them. If main_window.py also starts them, that's harmless — an
+        # extra poll of an already-empty queue is a cheap no-op.
+        self.update_clock()
+        self._poll_monitor_events_loop()
+
+    def _poll_monitor_events_loop(self) -> None:
+        self.poll_monitor_events()
+        self.after(500, self._poll_monitor_events_loop)
+
     # ------------------------------------------------------------------
     # Layout
     # ------------------------------------------------------------------
@@ -227,7 +245,22 @@ class Dashboard(ctk.CTkFrame):
 
         self._build_left_panel(left_panel)
         self._build_center_panel(center_panel)
-        self._build_right_panel(right_panel)
+        # Right panel (PATHS card) removed for a more compact 2-column layout.
+        # Keeps the dashboard responsive when only left+center content is present.
+        try:
+            right_panel.grid_remove()
+        except Exception:
+            pass
+
+        # Rebalance grid weights so columns don't reserve space for the removed panel.
+        try:
+            self.grid_columnconfigure(0, weight=3)
+            self.grid_columnconfigure(1, weight=4)
+            self.grid_columnconfigure(2, weight=0)
+        except Exception:
+            pass
+
+
 
         action_bar = ctk.CTkFrame(self, fg_color=theme.BG_SECONDARY, corner_radius=theme.PANEL_CORNER_RADIUS, border_width=1, border_color=theme.BORDER)
         action_bar.grid(row=3, column=0, columnspan=3, sticky="nsew", padx=20, pady=(0, 10))
@@ -235,8 +268,8 @@ class Dashboard(ctk.CTkFrame):
 
 
         self.activity_log = ActivityLog(self)
-        self.activity_log.grid(row=4, column=0, columnspan=3, sticky="nsew", padx=20, pady=(0, 20))
-        self.grid_rowconfigure(4, weight=1)
+        self.activity_log.grid(row=4, column=0, columnspan=3, sticky="ew", padx=20, pady=(0, 20))
+        self.grid_rowconfigure(4, weight=0)
 
     def _build_header(self) -> None:
         try:
@@ -411,11 +444,9 @@ class Dashboard(ctk.CTkFrame):
             "refresh_saves_action": lambda: self.refresh_saves(log_activity=True),
             "start_monitoring": self.start_monitoring,
             "stop_monitoring": self.stop_monitoring,
-            "open_save_folder": self.open_save_folder,
-            "open_backup_folder": self.open_backup_folder,
             "delete_backup": self.delete_backup,
-            "open_settings": self.open_settings,
             "exit_app": self.exit_app,
+
         }
         for column, (label, style_key, callback_name) in enumerate(_ACTION_DEFINITIONS):
             button = ctk.CTkButton(
@@ -944,7 +975,8 @@ class Dashboard(ctk.CTkFrame):
             self.activity_log.append(self._now_text(), "info", "No deleted save is currently available to restore.")
             return
 
-        if not ask_confirmation("Restore Deleted Save", f"Restore the latest backup for {target.folder_id}?"):
+        settings = self.settings_manager.load()
+        if settings.confirm_before_restore and not ask_confirmation("Restore Deleted Save", f"Restore the latest backup for {target.folder_id}?"):
             self.activity_log.append(self._now_text(), "info", f"Restore declined for {target.folder_id}.")
             return
 
@@ -1005,7 +1037,16 @@ class Dashboard(ctk.CTkFrame):
             result = self.backup_manager.create_or_update_backup(self.selected_save)
 
             self.refresh_saves(log_activity=False)
-            self.activity_log.append(self._now_text(), "success", f"Backup {result.status} for {result.folder_id}.")
+            # A "current" status means create_or_update_backup() found the
+            # backup already matches the live save and skipped writing
+            # anything — that's not a new success, it's a no-op. Reporting
+            # it as "success" every time was misleading when paired with
+            # the outdated-badge bug: the log said success while nothing
+            # had actually changed on disk.
+            if result.status == "current":
+                self.activity_log.append(self._now_text(), "info", f"Backup already up to date for {result.folder_id}.")
+            else:
+                self.activity_log.append(self._now_text(), "success", f"Backup {result.status} for {result.folder_id}.")
         except Exception as exc:
             self.logger.exception("Backup creation failed for %s", self.selected_save.folder_id)
             show_error_dialog("Backup Failed", f"Unable to create backup for {self.selected_save.folder_id}.", str(exc))
@@ -1015,7 +1056,8 @@ class Dashboard(ctk.CTkFrame):
             self.activity_log.append(self._now_text(), "warning", "Load Backup requested with no save selected.")
             return
         label = self.selected_save.display_name
-        if not ask_confirmation("Restore Backup", f"Restore backup for {self.selected_save.folder_id} ({label})?"):
+        settings = self.settings_manager.load()
+        if settings.confirm_before_restore and not ask_confirmation("Restore Backup", f"Restore backup for {self.selected_save.folder_id} ({label})?"):
             self.activity_log.append(self._now_text(), "info", f"Restore declined for {self.selected_save.folder_id}.")
             return
         try:
@@ -1033,7 +1075,8 @@ class Dashboard(ctk.CTkFrame):
             self.activity_log.append(self._now_text(), "warning", "Delete Backup requested with no save selected.")
             return
         label = self.selected_save.display_name
-        if not ask_confirmation("Delete Backup", f"Delete backup for {self.selected_save.folder_id} ({label})?"):
+        settings = self.settings_manager.load()
+        if settings.confirm_before_delete and not ask_confirmation("Delete Backup", f"Delete backup for {self.selected_save.folder_id} ({label})?"):
             self.activity_log.append(self._now_text(), "info", f"Backup delete declined for {self.selected_save.folder_id}.")
             return
         try:
@@ -1064,50 +1107,28 @@ class Dashboard(ctk.CTkFrame):
         self.activity_log.append(self._now_text(), "info", "Monitoring stopped.")
 
     def _open_folder_in_file_manager(self, folder_path: str | Path) -> None:
-        """Open the given folder path in the user's file manager.
+        """Open the given folder path in the user's actual default file manager.
 
-        Uses OS-specific commands:
-        - Linux: xdg-open
-        - macOS: open
-        - Windows: explorer
+        Delegates to the single shared implementation in
+        src.utils.helpers.open_folder_in_file_manager (also used by
+        SetupWizard) instead of duplicating OS-specific launch logic here.
+        This used to shell out to `explorer` on Windows via PATH lookup,
+        which is fragile inside a frozen exe and can silently fall back to
+        opening Explorer's default view instead of the intended folder —
+        the shared helper uses os.startfile() on Windows to avoid that.
         """
         folder = Path(folder_path).expanduser()
-        try:
-            folder = folder.resolve()
-        except Exception:
-            # resolve() can fail for non-existing paths; keep expanded path.
-            pass
-
-        if not folder.exists() or not folder.is_dir():
-            show_error_dialog(
-                "Folder Not Found",
-                "The folder configured in Settings does not exist or is not a directory.",
-                str(folder),
-            )
-            return
-
-        try:
-            if sys.platform.startswith("linux"):
-                opener = shutil.which("xdg-open")
-                if not opener:
-                    raise RuntimeError("xdg-open is not available")
-                subprocess.Popen([opener, str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif sys.platform == "darwin":
-                opener = shutil.which("open")
-                if not opener:
-                    raise RuntimeError("open is not available")
-                subprocess.Popen([opener, str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif sys.platform.startswith("win"):
-                # explorer.exe is the standard Windows shell folder opener.
-                subprocess.Popen(["explorer", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            else:
-                # Last resort: try xdg-open (may work on some Unix-like systems)
-                subprocess.Popen(["xdg-open", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            self.activity_log.append(self._now_text(), "success", f"Opened folder: {folder}")
-        except Exception as exc:
-            self.logger.exception("Failed to open folder in file manager: %s", folder)
-            show_error_dialog("Open Folder Failed", "Unable to open the configured folder.", str(exc))
+        opened = open_folder_in_file_manager(folder)
+        if opened:
+            try:
+                resolved = folder.resolve()
+            except Exception:
+                resolved = folder
+            self.activity_log.append(self._now_text(), "success", f"Opened folder: {resolved}")
+        else:
+            # open_folder_in_file_manager already showed an error dialog
+            # for both the "folder doesn't exist" and "launch failed" cases.
+            self.logger.warning("Failed to open folder in file manager: %s", folder)
 
     def open_save_folder(self) -> None:
         settings = self.settings_manager.load()
@@ -1185,18 +1206,9 @@ class Dashboard(ctk.CTkFrame):
                 self.activity_log.append(self._now_text(), "info", f"Restore declined for {event.folder_id}.")
             return
 
-        if action == "auto_backup":
-            status = result.get("status", "updated")
-            self.refresh_saves(log_activity=False)
-            self.activity_log.append(
-                self._now_text(), "success",
-                f"Auto-backup {status} for {event.folder_id} (new progress detected).",
-            )
-            return
+        # Auto-backup actions were removed (monitoring no longer creates
+        # backups on "modified" events).
 
-        if action == "auto_backup_failed":
-            self.activity_log.append(self._now_text(), "warning", f"Auto-backup failed for {event.folder_id}.")
-            return
 
         if action == "ignored":
             # No-op modifications (hash still matches the existing backup)

@@ -236,10 +236,22 @@ class SetupWizard(ctk.CTkToplevel):
             self.save_folder_var.set(str(candidates[0]))
             self.status_label.configure(text_color=theme.SUCCESS)
             self.status_var.set(f"Auto-detected {len(candidates)} candidate folder(s). Using the first result.")
+            self._refresh_preview()
+            return
+
+        # If the OS default locations don't exist / no valid candidates were
+        # found, force manual selection.
+        self.status_label.configure(text_color=theme.WARNING)
+        self.status_var.set("Auto-detect did not find the save folder. Please browse to select it manually.")
+        selected_folder = browse_for_directory("Select Repo Save Folder", self.save_folder_var.get())
+        if selected_folder:
+            self.save_folder_var.set(selected_folder)
+            self.status_var.set("Save folder selected manually.")
         else:
-            self.status_label.configure(text_color=theme.WARNING)
-            self.status_var.set("No save folder candidates were found automatically.")
+            self.status_var.set("No folder selected.")
+
         self._refresh_preview()
+
 
     def _browse_save_folder(self) -> None:
         selected_folder = browse_for_directory("Select Repo Save Folder", self.save_folder_var.get())
@@ -262,28 +274,39 @@ class SetupWizard(ctk.CTkToplevel):
             self.status_var.set("No folder selected.")
 
     def _open_save_folder(self) -> None:
-        # Normalize the path exactly like Dashboard does, then open it.
-        from src.ui.dashboard import Dashboard
-
+        # Uses the single shared open_folder_in_file_manager() implementation
+        # (see src/utils/helpers.py) — this used to reach into Dashboard's
+        # private method and call it with `self` bound to this SetupWizard
+        # instance, which crashed with an AttributeError on every call
+        # because SetupWizard has no `activity_log`/`logger` attributes.
+        # Calling the shared helper directly avoids that entirely and keeps
+        # the wizard and the main dashboard opening folders identically.
         folder = Path(self.save_folder_var.get()).expanduser()
-        try:
-            folder = folder.resolve()
-        except Exception:
-            # resolve() can fail for non-existing paths; keep expanded path.
-            pass
-
-        Dashboard._open_folder_in_file_manager(self, folder)
+        opened = open_folder_in_file_manager(folder)
+        if opened:
+            try:
+                folder = folder.resolve()
+            except Exception:
+                pass
+            self.status_label.configure(text_color=theme.TEXT_SECONDARY)
+            self.status_var.set(f"Opened folder: {folder}")
+        else:
+            self.status_label.configure(text_color=theme.WARNING)
+            self.status_var.set("Unable to open the save folder.")
 
     def _open_backup_folder(self) -> None:
-        from src.ui.dashboard import Dashboard
-
         folder = Path(self.backup_folder_var.get()).expanduser()
-        try:
-            folder = folder.resolve()
-        except Exception:
-            pass
-
-        Dashboard._open_folder_in_file_manager(self, folder)
+        opened = open_folder_in_file_manager(folder)
+        if opened:
+            try:
+                folder = folder.resolve()
+            except Exception:
+                pass
+            self.status_label.configure(text_color=theme.TEXT_SECONDARY)
+            self.status_var.set(f"Opened folder: {folder}")
+        else:
+            self.status_label.configure(text_color=theme.WARNING)
+            self.status_var.set("Unable to open the backup folder.")
 
 
 

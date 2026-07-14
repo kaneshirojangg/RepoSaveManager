@@ -32,10 +32,36 @@ class MonitorEvent:
     payload: dict[str, Any]
 
 
+def _resolved(path: Path) -> Path:
+    """Resolve a path defensively.
+
+    Path.resolve() can raise on some platforms/edge cases (e.g. a path that
+    disappears mid-resolve). Falls back to the original path rather than
+    blowing up an event-handling callback.
+    """
+    try:
+        return path.resolve()
+    except OSError:
+        return path
+
+
 class _RepoSaveWatchHandler(FileSystemEventHandler):
     def __init__(self, manager: "MonitorManager", watch_root: Path) -> None:
         self.manager = manager
-        self.watch_root = watch_root
+        # Pre-resolve once up front so every comparison below is cheap.
+        self.watch_root = _resolved(watch_root)
+
+    def _is_direct_child_of_watch_root(self, candidate_parent: Path) -> bool:
+        # NOTE: this used to compare `candidate_parent == self.watch_root`
+        # directly. watchdog hands back whatever raw src_path the OS gives
+        # it, which is not guaranteed to be resolved/normalized the same
+        # way self.watch_root was (case differences, short-path forms,
+        # trailing separators, symlinked AppData redirects on Windows,
+        # etc.). A single mismatch there meant this comparison silently
+        # failed for *every* event, so queue_event() was never called and
+        # auto-backup never had a chance to run. Resolving both sides
+        # before comparing fixes that.
+        return _resolved(candidate_parent) == self.watch_root
 
     def on_created(self, event) -> None:  # type: ignore[override]
         # Only a brand-new top-level REPO_SAVE_xxx folder counts as "created" —
@@ -43,7 +69,7 @@ class _RepoSaveWatchHandler(FileSystemEventHandler):
         if not getattr(event, "is_directory", False):
             return
         folder_path = Path(getattr(event, "src_path", ""))
-        if folder_path.name and folder_path.parent == self.watch_root:
+        if folder_path.name and self._is_direct_child_of_watch_root(folder_path.parent):
             self.manager.queue_event("created", folder_path.name, folder_path)
 
     def on_deleted(self, event) -> None:  # type: ignore[override]
@@ -52,7 +78,7 @@ class _RepoSaveWatchHandler(FileSystemEventHandler):
         if not getattr(event, "is_directory", False):
             return
         folder_path = Path(getattr(event, "src_path", ""))
-        if folder_path.name and folder_path.parent == self.watch_root:
+        if folder_path.name and self._is_direct_child_of_watch_root(folder_path.parent):
             self.manager.queue_event("deleted", folder_path.name, folder_path)
 
     def on_modified(self, event) -> None:  # type: ignore[override]
@@ -64,7 +90,7 @@ class _RepoSaveWatchHandler(FileSystemEventHandler):
         folder_path = src_path.parent
         # Only react to files that live directly inside one of the
         # top-level REPO_SAVE_xxx folders being watched.
-        if folder_path.name and folder_path.parent == self.watch_root:
+        if folder_path.name and self._is_direct_child_of_watch_root(folder_path.parent):
             self.manager.queue_event("modified", folder_path.name, folder_path)
 
 
@@ -130,6 +156,7 @@ class MonitorManager:
         self.logger.info("Monitoring stopped")
 
     def queue_event(self, event_type: str, folder_id: str, path: Path, **payload: Any) -> None:
+        self.logger.debug("Queuing monitor event: %s for %s (%s)", event_type, folder_id, path)
         self._queue.put(
             MonitorEvent(
                 event_type=event_type,
@@ -151,10 +178,9 @@ class MonitorManager:
         """Collapse a burst of "modified" events for the same folder down to
         just the most recent one.
 
-        A single autosave can fire many rapid file-write notifications
-        (temp file write, rename, metadata touch, etc.). Without this, every
-        one of those would separately attempt an auto-backup. "created" and
-        "deleted" events are left untouched and keep their original order.
+        Auto-backup creation has been removed; monitoring no longer performs
+        any work for "modified" events. This method remains defensive to keep
+        the event queue small if monitoring is still active.
         """
         seen_modified_ids: set[str] = set()
         collapsed: list[MonitorEvent] = []
@@ -166,6 +192,7 @@ class MonitorManager:
             collapsed.append(evt)
         collapsed.reverse()
         return collapsed
+
 
     def process_event(self, event: MonitorEvent) -> dict[str, Any]:
         if event.event_type == "created":
@@ -183,36 +210,9 @@ class MonitorManager:
                 "record": record,
             }
 
+        # Auto-backups on file modifications were removed.
         if event.event_type == "modified":
-            return self._handle_modified(event)
+            return {"action": "ignored", "folder_id": event.folder_id}
 
         return {"action": "ignored", "folder_id": event.folder_id}
 
-    def _handle_modified(self, event: MonitorEvent) -> dict[str, Any]:
-        """A save file changed on disk — if that means the live save now has
-        newer progress than its backup (or has no backup at all yet), catch
-        the backup up automatically. This only ever runs while monitoring is
-        active, since it's only reachable through the watchdog handler above.
-        """
-        saves = self.save_manager.discover_from_settings(self.backup_manager)
-        save_model = self.save_manager.get_save_by_folder_id(saves, event.folder_id)
-
-        if save_model is None or save_model.is_deleted:
-            return {"action": "ignored", "folder_id": event.folder_id}
-
-        try:
-            result = self.backup_manager.create_or_update_backup(save_model)
-        except Exception:
-            self.logger.exception("Auto-backup failed for %s", event.folder_id)
-            return {"action": "auto_backup_failed", "folder_id": event.folder_id}
-
-        if result.status == "current":
-            # Fingerprint still matches the existing backup — nothing to do.
-            return {"action": "ignored", "folder_id": event.folder_id}
-
-        self.logger.info("Auto-backup %s for %s", result.status, event.folder_id)
-        return {
-            "action": "auto_backup",
-            "folder_id": event.folder_id,
-            "status": result.status,
-        }
