@@ -1,9 +1,8 @@
 # TODO
 
-- [x] Remove auto-backup creation triggered by save-file modifications (MonitorManager)
-- [x] Remove Dashboard handling for auto_backup / auto_backup_failed actions
-- [x] Update Settings UI text to remove claim that auto-start monitoring creates backups on save changes
-- [ ] Sanity check by running import / lint (if available) and ensure app starts
-- [ ] Windows packaging: run `./build-windows-exe.sh` and verify `RepoSaveManager-Windows.zip`
-
+- [ ] Update Windows packaging so the extracted zip shows `Repo Save Manager.exe` in the top-level extracted folder.
+  - [ ] Inspect current `build-windows-exe.sh` packaging layout.
+  - [ ] Modify zip step to re-root the dist folder so exe lands at extraction root.
+  - [ ] (Optional) Add a post-build verification that the zip contains the expected exe at the correct path.
+- [ ] Re-run `./build-windows-exe.sh` and verify resulting zip contents/extracted layout.
 
