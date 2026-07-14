@@ -123,26 +123,51 @@ Now go to **[Install — Windows](#install--windows)** or
 <a id="install--windows"></a>
 ## ▸ 03. Install — Windows
 
+No Python, no terminal, no setup — just extract and double-click.
+
 1. Open your **Downloads** folder and find **`RepoSaveManager-main.zip`**.
 2. Right-click it → **Extract All...** → **Extract**.
 3. Open the extracted **`RepoSaveManager-main`** folder.
-4. No Python yet? Install it from **[python.org/downloads](https://www.python.org/downloads/)**.
-   ⚠️ On the first install screen, tick **"Add python.exe to PATH"** before
-   clicking Install.
-5. Inside the folder, hold **Shift**, right-click empty space, choose
-   **"Open PowerShell window here"** (or **"Open Terminal here"**).
-6. Paste and run:
+4. Find **`Repo Save Manager.exe`** and double-click it to open the app.
+5. If Windows shows a blue **"Windows protected your PC"** security warning,
+   click **More info** → **Run anyway**. (This is normal for small
+   independent apps that aren't from the Microsoft Store.)
+6. Set your save + backup folders when asked.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  ⚠  IMPORTANT: Keep the WHOLE folder together.                   │
+│                                                                    │
+│  Repo Save Manager.exe needs the other files sitting next to it  │
+│  (like the "_internal" folder) to run. Never move or copy just   │
+│  the .exe by itself — always keep the entire extracted           │
+│  RepoSaveManager-main folder in one place.                       │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Want a shortcut on your Desktop?**
+Right-click **`Repo Save Manager.exe`** → **Show more options** (Windows 11)
+→ **Send to** → **Desktop (create shortcut)**. The shortcut can live on your
+Desktop — just don't move the original `.exe` or its folder.
+
+> **Next time:** just double-click the `.exe` (or your Desktop shortcut) —
+> no setup needed again.
+
+<details>
+<summary><b>Prefer to run it from source instead? (advanced, optional)</b></summary>
+
+1. Open the extracted `RepoSaveManager-main` folder.
+2. Install Python from **[python.org/downloads](https://www.python.org/downloads/)**
+   — tick **"Add python.exe to PATH"** during install.
+3. Inside the folder, hold **Shift**, right-click empty space, choose
+   **"Open PowerShell window here"**.
+4. Run:
    ```powershell
    pip install -r requirements.txt
    python launch.py
    ```
-7. If Windows shows a security warning, click **More info** → **Run anyway**.
-8. Set your save + backup folders when asked.
 
-> Keep the whole `RepoSaveManager-main` folder together — don't move files
-> out of it individually.
-
-> **Next time:** just repeat steps 5–6 to launch the app again.
+</details>
 
 [↑ back to top](#-table-of-contents)
 
@@ -325,11 +350,26 @@ proactively flagging something:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
+│  PROBLEM: Windows shows "Windows protected your PC"              │
+│  TRY:     Click "More info" → "Run anyway". This is normal for   │
+│           independent apps not distributed through the Microsoft │
+│           Store — it isn't a sign anything is wrong.             │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│  PROBLEM: Double-clicking the .exe does nothing / shows an error │
+│  TRY:     Make sure you extracted the ZIP first (right-click →   │
+│           Extract All) — running it straight from inside the     │
+│           zip without extracting will fail. Also make sure the   │
+│           "_internal" folder is still sitting next to the .exe.  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
 │  PROBLEM: "python: command not found" / "python is not recognized"│
-│  TRY:     On some systems the command is `python3` instead of    │
-│           `python` — try that instead. On Windows, make sure you │
-│           ticked "Add python.exe to PATH" during install, then   │
-│           reopen PowerShell.                                      │
+│  TRY:     (Only relevant if running from source.) On some        │
+│           systems the command is `python3` instead of `python`.  │
+│           On Windows, make sure you ticked "Add python.exe to    │
+│           PATH" during install, then reopen PowerShell.          │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
@@ -337,7 +377,7 @@ proactively flagging something:
 │  TRY:     Re-download the ZIP to make sure you have the latest   │
 │           version — this was a known issue in earlier versions.  │
 │           If it still happens, note whatever error text appears  │
-│           in the terminal window and report it.                  │
+│           and report it.                                          │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
@@ -372,15 +412,16 @@ track down.
 <a id="uninstall"></a>
 ## ▸ 09. Uninstall
 
+**Windows** — delete the whole `RepoSaveManager-main` folder you extracted
+(and the Desktop shortcut, if you made one). This won't touch your actual
+R.E.P.O. saves or your backup folder — only the app itself.
+
 **Linux** — if you used `install.sh`:
 ```bash
 bash uninstall.sh
 ```
-This removes the launcher, icon, and installed app files.
-
-**Windows / Linux (either way)** — you can also just delete the whole
-`RepoSaveManager-main` folder you extracted. This won't touch your actual
-R.E.P.O. saves or your backup folder — only the app itself.
+This removes the launcher, icon, and installed app files. Otherwise, delete
+the extracted `RepoSaveManager-main` folder the same way as Windows.
 
 [↑ back to top](#-table-of-contents)
 
