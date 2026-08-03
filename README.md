@@ -90,22 +90,13 @@ folder on your computer, and the "key" is your save file.
 <a id="download"></a>
 ## ▸ 02. Download
 
-Choose the download that matches your operating system:
+Download the file for your operating system:
 
-**Windows:** download the standalone executable from the latest release:
-**[RepoSaveManager-windows.exe](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-windows.exe)**
+**Windows** - **[RepoSaveManager-windows.exe](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-windows.exe)**
 
-**Linux:** download the release archive from the latest release:
-**[RepoSaveManager-linux.tar.gz](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**
+**Linux** - **[RepoSaveManager-linux.tar.gz](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**
 
-If you want the full source instead of the packaged release, use the GitHub
-project page:
-**[github.com/kaneshirojangg/RepoSaveManager](https://github.com/kaneshirojangg/RepoSaveManager)**
-
-No GitHub account, git, or command-line tools are needed for the Windows
-download link above.
-
-Now go to **[Install — Windows](#install--windows)** or **[Install — Linux](#install--linux)**.
+Then follow the matching install guide below.
 
 [↑ back to top](#-table-of-contents)
 
@@ -114,38 +105,11 @@ Now go to **[Install — Windows](#install--windows)** or **[Install — Linux](
 <a id="install--windows"></a>
 ## ▸ 03. Install — Windows
 
-No Python, no terminal, no ZIP extraction — just download and run the file.
-
 1. Click **[RepoSaveManager-windows.exe](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-windows.exe)**.
-2. Save the file anywhere you want.
-3. Double-click the downloaded `.exe` to open the app.
-4. If Windows shows a blue **"Windows protected your PC"** security warning,
-   click **More info** → **Run anyway**. This is normal for small
-   independent apps that aren't from the Microsoft Store.
-5. Set your save + backup folders when asked.
-
-**Want a shortcut on your Desktop?**
-Right-click **`Repo Save Manager.exe`** → **Show more options** (Windows 11)
-→ **Send to** → **Desktop (create shortcut)**.
-
-> **Next time:** just double-click the `.exe` (or your Desktop shortcut) —
-> no extra setup needed.
-
-<details>
-<summary><b>Prefer to run it from source instead? (advanced, optional)</b></summary>
-
-1. Open the extracted `RepoSaveManager-main` folder.
-2. Install Python from **[python.org/downloads](https://www.python.org/downloads/)**
-   — tick **"Add python.exe to PATH"** during install.
-3. Inside the folder, hold **Shift**, right-click empty space, choose
-   **"Open PowerShell window here"**.
-4. Run:
-   ```powershell
-   pip install -r requirements.txt
-   python launch.py
-   ```
-
-</details>
+2. Save the file anywhere.
+3. Double-click the `.exe` to open the app.
+4. If Windows shows a security warning, choose **More info** → **Run anyway**.
+5. Pick your save folder and backup folder when the app asks.
 
 [↑ back to top](#-table-of-contents)
 
@@ -154,27 +118,14 @@ Right-click **`Repo Save Manager.exe`** → **Show more options** (Windows 11)
 <a id="install--linux"></a>
 ## ▸ 04. Install — Linux
 
-1. Download the release archive:
-      **[RepoSaveManager-linux.tar.gz](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**
-2. Extract it: right-click → **Extract Here**, or run:
-   ```bash
-      tar -xzf RepoSaveManager-linux.tar.gz
-   ```
-3. Open a terminal inside the extracted **`RepoSaveManager-linux`** folder.
-4. Run the installer:
+1. Click **[RepoSaveManager-linux.tar.gz](https://github.com/kaneshirojangg/RepoSaveManager/releases/latest/download/RepoSaveManager-linux.tar.gz)**.
+2. Extract the archive.
+3. Open the extracted folder.
+4. Run:
    ```bash
    bash install.sh
    ```
-5. Open **"Repo Save Manager"** from your app menu / desktop.
-
-No `install.sh`, or it didn't work on your distro? Run it directly instead:
-```bash
-python3 -m pip install -r requirements.txt
-python3 launch.py
-```
-
-> **Next time:** just open a terminal in that folder and run
-> `python3 launch.py`.
+5. Open **Repo Save Manager** from your app menu.
 
 [↑ back to top](#-table-of-contents)
 
@@ -183,7 +134,7 @@ python3 launch.py
 <a id="first-launch"></a>
 ## ▸ 05. First launch
 
-The very first time you open the app, it needs to know two locations:
+The first time you open the app, choose two folders:
 
 ```
   ┌───────────────────────────┐   ┌──────────────────────────────┐
@@ -195,19 +146,11 @@ The very first time you open the app, it needs to know two locations:
   └───────────────────────────┘   └──────────────────────────────┘
 ```
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  TIP: Don't know where your save folder is?                      │
-│  Click "Auto-Detect" and the app will try the common R.E.P.O.    │
-│  install locations for you.                                      │
-└──────────────────────────────────────────────────────────────────┘
-```
+If you do not know the save folder, click **Auto-Detect** first.
 
-Your save folder should contain folders that look like this:
-`REPO_SAVE_2026_07_07_21_09_48`
+Your save folder should contain folders like `REPO_SAVE_2026_07_07_21_09_48`.
 
-Once both folders are set, click **Test Configuration** to make sure
-everything checks out green, then click **Save**.
+When both folders are set, click **Test Configuration**, then **Save**.
 
 [↑ back to top](#-table-of-contents)
 
