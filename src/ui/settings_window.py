@@ -82,7 +82,8 @@ class SettingsWindow(ctk.CTkToplevel):
         self.auto_start_var = ctk.BooleanVar(value=self.settings.auto_start_monitoring)
         self.confirm_restore_var = ctk.BooleanVar(value=self.settings.confirm_before_restore)
         self.confirm_delete_var = ctk.BooleanVar(value=self.settings.confirm_before_delete)
-        self.status_var = ctk.StringVar(value="Adjust settings and run Test Configuration before saving.")
+        self.status_var = ctk.StringVar(value="Adjust folders and toggle preferences. Preference buttons save immediately.")
+        self._preference_buttons: dict[str, ctk.CTkButton] = {}
 
         self._build_ui()
         # Show the current configuration's health immediately instead of a
@@ -228,29 +229,132 @@ class SettingsWindow(ctk.CTkToplevel):
         ctk.CTkLabel(panel, text="PREFERENCES", font=theme.header_font(15), text_color=theme.TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(16, 8))
 
         ctk.CTkLabel(panel, text="Monitoring and confirmations", font=theme.body_font(12), text_color=theme.TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(10, 4))
-        for var, label in (
-            (self.auto_start_var, "Auto-start monitoring"),
-            (self.confirm_restore_var, "Confirm before restore"),
-            (self.confirm_delete_var, "Confirm before delete"),
-        ):
-            ctk.CTkCheckBox(
-                panel,
-                text=label,
-                variable=var,
-                fg_color=theme.ACCENT,
-                hover_color=theme.ACCENT_HOVER,
-                text_color=theme.TEXT_PRIMARY,
-                font=theme.body_font(12),
-                border_color=theme.BORDER,
-            ).pack(anchor="w", padx=16, pady=6)
+        self._add_preference_toggle(
+            panel,
+            key="auto_start_monitoring",
+            title="Auto-start monitoring",
+            description="Starts live monitoring as soon as the app opens.",
+            variable=self.auto_start_var,
+        )
+        self._add_preference_toggle(
+            panel,
+            key="confirm_before_restore",
+            title="Confirm before restore",
+            description="Asks before restoring deleted or selected backups.",
+            variable=self.confirm_restore_var,
+        )
+        self._add_preference_toggle(
+            panel,
+            key="confirm_before_delete",
+            title="Confirm before delete",
+            description="Asks before removing a backup from disk.",
+            variable=self.confirm_delete_var,
+        )
 
         ctk.CTkLabel(
             panel,
-            text="Auto-start monitoring enables live detection.\nThe app can prompt you to restore when saves are deleted.",
+            text="Toggle buttons save immediately so your choices survive closing the app.",
             font=theme.body_font(10),
             text_color=theme.TEXT_MUTED,
             justify="left",
-        ).pack(anchor="w", padx=16, pady=(4, 12))
+        ).pack(anchor="w", padx=16, pady=(8, 12))
+
+    def _add_preference_toggle(
+        self,
+        panel: ctk.CTkFrame,
+        *,
+        key: str,
+        title: str,
+        description: str,
+        variable: ctk.BooleanVar,
+    ) -> None:
+        row = ctk.CTkFrame(
+            panel,
+            fg_color=theme.BG_CARD,
+            corner_radius=theme.CARD_CORNER_RADIUS,
+            border_width=1,
+            border_color=theme.BORDER,
+        )
+        row.pack(fill="x", padx=16, pady=6)
+
+        text_stack = ctk.CTkFrame(row, fg_color="transparent")
+        text_stack.pack(side="left", fill="both", expand=True, padx=12, pady=10)
+        ctk.CTkLabel(text_stack, text=title, font=theme.body_font(12, "bold"), text_color=theme.TEXT_PRIMARY).pack(anchor="w")
+        ctk.CTkLabel(text_stack, text=description, font=theme.body_font(10), text_color=theme.TEXT_MUTED, justify="left").pack(anchor="w", pady=(2, 0))
+
+        button = ctk.CTkButton(
+            row,
+            command=lambda pref_key=key: self._toggle_preference(pref_key),
+            width=132,
+            height=34,
+            corner_radius=theme.BUTTON_CORNER_RADIUS,
+        )
+        button.pack(side="right", padx=12, pady=10)
+        self._preference_buttons[key] = button
+        self._update_preference_button(key)
+
+    def _update_preference_button(self, key: str) -> None:
+        mapping = {
+            "auto_start_monitoring": (self.auto_start_var.get(), self._preference_buttons.get("auto_start_monitoring")),
+            "confirm_before_restore": (self.confirm_restore_var.get(), self._preference_buttons.get("confirm_before_restore")),
+            "confirm_before_delete": (self.confirm_delete_var.get(), self._preference_buttons.get("confirm_before_delete")),
+        }
+        enabled, button = mapping[key]
+        if button is None:
+            return
+
+        if enabled:
+            button.configure(
+                text="Disable",
+                fg_color=theme.ACCENT,
+                hover_color=theme.ACCENT_HOVER,
+                text_color=theme.TEXT_ON_ACCENT,
+                border_width=0,
+            )
+        else:
+            button.configure(
+                text="Enable",
+                fg_color="transparent",
+                hover_color=theme.BG_CARD_HOVER,
+                text_color=theme.TEXT_SECONDARY,
+                border_width=1,
+                border_color=theme.BORDER,
+            )
+
+    def _sync_preference_settings(self) -> None:
+        self.settings.auto_start_monitoring = self.auto_start_var.get()
+        self.settings.confirm_before_restore = self.confirm_restore_var.get()
+        self.settings.confirm_before_delete = self.confirm_delete_var.get()
+
+    def _save_preferences(self, message: str) -> None:
+        self._sync_preference_settings()
+        self.settings_manager.save(self.settings)
+        self.result.saved = True
+        self.result.settings = self.settings
+        self.status_label.configure(text_color=theme.SUCCESS)
+        self.status_var.set(message)
+
+    def _toggle_preference(self, key: str) -> None:
+        previous_value: bool
+        variable: ctk.BooleanVar
+        if key == "auto_start_monitoring":
+            variable = self.auto_start_var
+        elif key == "confirm_before_restore":
+            variable = self.confirm_restore_var
+        else:
+            variable = self.confirm_delete_var
+
+        previous_value = variable.get()
+        variable.set(not previous_value)
+        self._update_preference_button(key)
+
+        try:
+            self._save_preferences(f"{key.replace('_', ' ').title()} saved.")
+        except Exception as exc:
+            variable.set(previous_value)
+            self._update_preference_button(key)
+            self.status_label.configure(text_color=theme.DANGER)
+            self.status_var.set(f"Unable to save preference change: {exc}")
 
     def _browse_save_folder(self) -> None:
         selected = browse_for_directory("Select Repo Save Folder", self.save_folder_var.get())
@@ -314,11 +418,9 @@ class SettingsWindow(ctk.CTkToplevel):
             self.status_var.set("Fix the validation issues before saving.")
             return
 
+        self._sync_preference_settings()
         self.settings.save_folder = str(validation.save_folder)
         self.settings.backup_folder = str(validation.backup_folder)
-        self.settings.auto_start_monitoring = self.auto_start_var.get()
-        self.settings.confirm_before_restore = self.confirm_restore_var.get()
-        self.settings.confirm_before_delete = self.confirm_delete_var.get()
 
         self.settings_manager.save(self.settings)
         self.result.saved = True
@@ -347,6 +449,9 @@ class SettingsWindow(ctk.CTkToplevel):
         self.auto_start_var.set(self.settings.auto_start_monitoring)
         self.confirm_restore_var.set(self.settings.confirm_before_restore)
         self.confirm_delete_var.set(self.settings.confirm_before_delete)
+        self._update_preference_button("auto_start_monitoring")
+        self._update_preference_button("confirm_before_restore")
+        self._update_preference_button("confirm_before_delete")
         self.status_label.configure(text_color=theme.TEXT_SECONDARY)
         self.status_var.set("Settings reset to defaults.")
         self._test_configuration()

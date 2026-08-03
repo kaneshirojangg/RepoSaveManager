@@ -62,6 +62,11 @@ jobs:
           Copy-Item uninstall.sh release/${{ matrix.asset_name }}/
           Copy-Item README.md release/${{ matrix.asset_name }}/
           Compress-Archive -Path release/${{ matrix.asset_name }}/* -DestinationPath release/${{ matrix.asset_name }}.zip
+          $exePath = Get-ChildItem -Path release/${{ matrix.asset_name }} -Filter '*.exe' -Recurse | Select-Object -First 1
+          if (-not $exePath) {
+            throw 'Expected Windows executable not found in packaged output.'
+          }
+          Copy-Item -Force $exePath.FullName release/${{ matrix.asset_name }}.exe
 
       - name: Upload Linux artifact
         if: runner.os == 'Linux'
@@ -75,7 +80,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
-          path: release/${{ matrix.asset_name }}.zip
+          path: |
+            release/${{ matrix.asset_name }}.zip
+            release/${{ matrix.asset_name }}.exe
 
   publish:
     needs: build
@@ -95,6 +102,7 @@ jobs:
           files: |
             release-assets/**/RepoSaveManager-linux.tar.gz
             release-assets/**/RepoSaveManager-windows.zip
+            release-assets/**/RepoSaveManager-windows.exe
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           draft: false

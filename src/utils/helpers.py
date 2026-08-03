@@ -135,22 +135,6 @@ def open_folder_in_file_manager(folder_path: str | Path) -> bool:
 def browse_for_directory(title: str, initial_dir: str | Path | None = None) -> str | None:
     initial_path = Path(initial_dir).expanduser().resolve() if initial_dir else None
 
-    if sys.platform.startswith("linux"):
-        chooser_command: list[str] | None = None
-        if shutil.which("zenity"):
-            chooser_command = ["zenity", "--file-selection", "--directory", "--title", title]
-            if initial_path is not None:
-                chooser_command.extend(["--filename", f"{initial_path}/"])
-        elif shutil.which("kdialog"):
-            chooser_command = ["kdialog", "--getexistingdirectory", str(initial_path or Path.home()), "--title", title]
-
-        if chooser_command is not None:
-            result = subprocess.run(chooser_command, capture_output=True, text=True, check=False)
-            if result.returncode == 0:
-                selected = result.stdout.strip()
-                return selected or None
-            return None
-
     try:
         from tkinter import Tk, filedialog
     except Exception:

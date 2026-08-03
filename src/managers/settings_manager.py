@@ -401,12 +401,17 @@ class SettingsManager:
 
         candidates: list[Path] = []
 
+        # The exact native Windows path is valid to check on every platform.
+        # That makes auto-detect work when the app is running from a Windows
+        # installation, a Wine prefix, or a mounted Windows profile.
+        for p in self._direct_windows_candidates():
+            if p.exists() and p.is_dir() and p not in candidates and self._contains_repo_save_folder(p):
+                candidates.append(p)
+
         # 1) OS-aware default location checks
         if os.name == "nt":
-            # Windows native layout (fast path)
-            for p in self._direct_windows_candidates():
-                if p.exists() and p.is_dir() and p not in candidates and self._contains_repo_save_folder(p):
-                    candidates.append(p)
+            # Windows native layout is already checked above.
+            pass
         else:
             # Linux/macOS: Proton/Wine layout (fast path)
             for p in self._direct_proton_candidates():
