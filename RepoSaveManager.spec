@@ -1,18 +1,28 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
 block_cipher = None
+
+
+def _existing_datas(entries: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    collected: list[tuple[str, str]] = []
+    for source, target in entries:
+        if os.path.exists(source):
+            collected.append((source, target))
+    return collected
 
 a = Analysis(
     ['launch.py'],
     pathex=[],
     binaries=[],
-    datas=[
+    datas=_existing_datas([
         ('assets', 'assets'),
         ('config', 'config'),
         ('data', 'data'),
         ('logs', 'logs'),
         ('backups', 'backups'),
-    ],
+    ]),
     hiddenimports=['customtkinter', 'watchdog'],
     hookspath=[],
     hooksconfig={},
